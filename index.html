@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+  <meta charset="utf-8">
+  <head>
+    <title>Kommune autocomplete eksempel</title>
+  </head>
+  <body>
+    <label for='adresse'>Kommune:</label>
+    <input type="text" id="kommune">
+    <span> Valgt kommune: </span><span id="valgtkommune"/>
+
+   <script src="https://cdn.jsdelivr.net/autocomplete.js/0/autocomplete.min.js"></script>
+
+    <script>
+      function search(query, callback) {
+        fetch("http://dawa.aws.dk/kommuner/autocomplete?q="+query+"*")
+        .catch(function (error) {
+          alert(error.message);
+          callback([]);
+        })
+        .then(function(response) {
+          if (response.status >=400 && response.status <= 499) {
+            response.json().then(function (object) {
+              alert(object.type + ': ' + object.title);
+            });            
+            callback([]);
+          }
+          else if (response.status >= 200 && response.status <=299 ){
+            return response.json();
+          }
+        }) 
+        .then( function ( kommuner ) { 
+          callback(kommuner);
+        });
+      };
+      autocomplete('#kommune',  {autoselect: true }, [
+        {
+          source: search,
+          displayKey: 'tekst',
+          templates: {
+            suggestion: function(suggestion) {
+              return '<div>' + suggestion.tekst + '</div>';
+            }
+          }
+        }
+      ]).on('autocomplete:selected', function(even, suggestion, dataset) {
+        console.log('selected', suggestion, dataset);
+        document.getElementById("valgtkommune").textContent = suggestion.tekst;
+      }).on('autocomplete:cursorchanged', function(even, suggestion, dataset) {
+        console.log('cursorchanged', suggestion, dataset);
+      });
+    </script>
+  </body>
+</html>
